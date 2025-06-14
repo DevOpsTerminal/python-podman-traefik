@@ -1,0 +1,18 @@
+# traefik.yml
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":80"
+  dashboard:
+    address: ":8083"
+
+providers:
+  file:
+    filename: "/etc/traefik/rules.yml"
+    watch: true
+
+log:
+  level: DEBUG

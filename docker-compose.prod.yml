@@ -11,7 +11,7 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.dashboard.address=:8080"
+      - "--entrypoints.dashboard.address=:8082"
       # Enable automatic HTTPS with Let's Encrypt
       - "--certificatesresolvers.leresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.leresolver.acme.httpchallenge.entrypoint=web"
@@ -22,9 +22,9 @@ services:
       # Use podman network
       - "--providers.docker.network=prod_network"
     ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"  # Dashboard - should be restricted in production
+      - "8081:80"        # HTTP traffic (mapped from 80 to 8081)
+      - "8443:443"       # HTTPS traffic (mapped from 443 to 8443)
+      - "8082:8080"      # Dashboard - should be restricted in production
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./letsencrypt:/letsencrypt"

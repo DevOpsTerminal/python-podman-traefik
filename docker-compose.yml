@@ -3,27 +3,19 @@ version: '3.8'
 services:
   traefik:
     image: traefik:v2.10
-    command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.dashboard.address=:8080"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.email=twoj@email.com"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--api.dashboard=true"
-      - "--providers.docker.network=podman"
+    command: --configFile=/etc/traefik/traefik.yml
     ports:
-      - "8082:8080"      # Traefik dashboard
-      - "8081:80"        # HTTP traffic
-      - "8443:443"       # HTTPS traffic
+      - "8081:80"         # HTTP traffic
+      - "8083:8083"      # Traefik dashboard
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./letsencrypt:/letsencrypt"
+      - "./traefik/traefik.yml:/etc/traefik/traefik.yml:ro"
+      - "./traefik/rules.yml:/etc/traefik/rules.yml:ro"
+    networks:
+      - podman
     restart: unless-stopped
+    depends_on:
+      - "projekt1"
+      - "projekt2"
 
   projekt1:
     build: ./projekt1
@@ -45,14 +37,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.projekt2.rule=Host(`localhost`) && PathPrefix(`/projekt2`)"
-      - "traefik.http.routers.projekt2.entrypoints=web"
-      - "traefik.http.services.projekt2.loadbalancer.server.port=5000"
-      - "traefik.http.middlewares.strip-prefix.stripprefix.prefixes=/projekt2"
-      - "traefik.http.routers.projekt2.middlewares=strip-prefix@docker"
     restart: unless-stopped
 
 networks:
   podman:
     name: podman
     external: false
-

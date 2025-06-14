@@ -116,7 +116,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"  # Dashboard
+      - "8082:8080"  # Dashboard
     
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -282,7 +282,7 @@ services:
       - "--entrypoints.web.address=:80"
     ports:
       - "80:80"
-      - "8080:8080"
+      - "8082:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
@@ -356,7 +356,7 @@ docker-compose -f docker-compose-local.yml ps
 ### Testowanie
 ```bash
 # Sprawdź dashboard Traefik
-curl http://localhost:8080
+curl http://localhost:8082
 
 # Testuj aplikacje
 curl http://localhost/sklep
@@ -370,7 +370,7 @@ curl http://localhost/portfolio
 ## Krop 6: Monitoring i Dashboard
 
 ### Dostęp do Dashboard Traefik
-Idź na: `http://twój-ip:8080`
+Idź na: `http://twój-ip:8082`
 
 W dashboard zobaczysz:
 - **HTTP Routers**: Twoje trasy
@@ -431,7 +431,7 @@ case $1 in
     ;;
   dashboard)
     echo "🖥️ Dashboard dostępny na:"
-    echo "http://$(curl -s ifconfig.me):8080"
+    echo "http://$(curl -s ifconfig.me):8082"
     ;;
   *)
     echo "Użycie: $0 {start|stop|restart|rebuild|logs|status|dashboard}"
@@ -550,8 +550,8 @@ ls -la letsencrypt/
 
 #### Dashboard nie działa
 ```bash
-# Sprawdź czy port 8080 jest otwarty
-sudo netstat -tlnp | grep 8080
+# Sprawdź czy port 8082 jest otwarty
+sudo netstat -tlnp | grep 8082
 
 # Sprawdź konfigurację
 docker-compose exec traefik traefik version
@@ -560,13 +560,13 @@ docker-compose exec traefik traefik version
 ### Przydatne komendy debugowania
 ```bash
 # Zobacz wszystkie routery
-curl -s http://localhost:8080/api/http/routers | jq
+curl -s http://localhost:8082/api/http/routers | jq
 
 # Zobacz wszystkie serwisy
-curl -s http://localhost:8080/api/http/services | jq
+curl -s http://localhost:8082/api/http/services | jq
 
 # Status Traefik
-curl -s http://localhost:8080/api/overview
+curl -s http://localhost:8082/api/overview
 ```
 
 ---
@@ -684,7 +684,7 @@ global:
 scrape_configs:
   - job_name: 'traefik'
     static_configs:
-      - targets: ['traefik:8080']
+      - targets: ['traefik:8082']
 ```
 
 ---
