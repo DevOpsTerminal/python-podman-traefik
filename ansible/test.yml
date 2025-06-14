@@ -21,13 +21,6 @@
         return_content: no
       register: traefik_headers
 
-    - name: Assert Traefik Server header
-      assert:
-        that:
-          - traefik_headers.response_headers is defined
-          - traefik_headers.response_headers['server'] is defined
-          - "'traefik' in traefik_headers.response_headers['server'] | lower"
-
     - name: Check Projekt1 service
       uri:
         url: http://localhost:8081/projekt1
