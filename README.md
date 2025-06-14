@@ -890,3 +890,29 @@ Właśnie opanowałeś jeden z najpopularniejszych narzędzi DevOps! Traefik to 
 - Kubernetes orchestration
 
 **Keep learning! 🚀**
+
+---
+
+## Bezpieczeństwo dashboardu Traefik w produkcji
+
+Dashboard Traefika w środowisku produkcyjnym jest domyślnie zabezpieczony hasłem (basic auth):
+
+- Dostęp do panelu jest możliwy tylko przez domenę `traefik.devopsterminal.com` po HTTPS.
+- Do logowania wymagany jest login i hasło (domyślnie: `admin` / `changeme`).
+- Hasło jest przechowywane jako hash bcrypt w labelu:
+  ```yaml
+  - "traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$05$$5HXxP9X8wJqTgYz5jK5u8uJq5VZ5QkXJ5zQ9X8wJqTgYz5jK5u8uJ"
+  ```
+- Middleware `auth` jest przypisany tylko do dashboardu, nie do backendów.
+
+### Jak zmienić hasło?
+1. Wygeneruj nowy hash bcrypt (np. na https://bcrypt-generator.com/).
+2. Podmień wartość labela w `docker-compose.prod.yml`:
+   ```yaml
+   - "traefik.http.middlewares.auth.basicauth.users=admin:<nowy_hash>"
+   ```
+3. Zrestartuj stack (`make restart-prod` lub przez systemd).
+
+**Uwaga:**
+- Nie udostępniaj dashboardu publicznie bez hasła!
+- Możesz dodatkowo ograniczyć dostęp po adresie IP lub przez VPN, dodając kolejne middleware.
