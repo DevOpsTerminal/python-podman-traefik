@@ -9,12 +9,15 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.dashboard.address=:8080"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.myresolver.acme.email=twoj@email.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--api.dashboard=true"
+      - "--providers.docker.network=podman"
     ports:
-      - "8080:8080"      # Traefik dashboard
+      - "8082:8080"      # Traefik dashboard
       - "8081:80"        # HTTP traffic
       - "8443:443"       # HTTPS traffic
     volumes:
@@ -24,19 +27,32 @@ services:
 
   projekt1:
     build: ./projekt1
+    networks:
+      - podman
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.projekt1.rule=Host(`projekt1.localhost`)"
+      - "traefik.http.routers.projekt1.rule=Host(`localhost`) && PathPrefix(`/projekt1`)"
       - "traefik.http.routers.projekt1.entrypoints=web"
       - "traefik.http.services.projekt1.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.strip-prefix.stripprefix.prefixes=/projekt1"
+      - "traefik.http.routers.projekt1.middlewares=strip-prefix@docker"
     restart: unless-stopped
 
   projekt2:
     build: ./projekt2
+    networks:
+      - podman
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.projekt2.rule=Host(`projekt2.localhost`)"
+      - "traefik.http.routers.projekt2.rule=Host(`localhost`) && PathPrefix(`/projekt2`)"
       - "traefik.http.routers.projekt2.entrypoints=web"
       - "traefik.http.services.projekt2.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.strip-prefix.stripprefix.prefixes=/projekt2"
+      - "traefik.http.routers.projekt2.middlewares=strip-prefix@docker"
     restart: unless-stopped
+
+networks:
+  podman:
+    name: podman
+    external: false
 
