@@ -49,5 +49,5 @@
       debug:
         msg:
           - "Traefik Dashboard: {{ 'Accessible' if traefik_dashboard.status == 200 else 'Not Accessible' }}"
-          - "Projekt1 Status: {{ projekt1_check.status }} - Content: {{ projekt1_check.content | b64decode | regex_search('>([^<]+)<') | default('No content') }}"
-          - "Projekt2 Status: {{ projekt2_check.status }} - Content: {{ projekt2_check.content | b64decode | regex_search('>([^<]+)<') | default('No content') }}"
+          - "Projekt1 Status: {{ projekt1_check.status }} - Content: {{ projekt1_check.content | default('No content') | truncate(80) }}"
+          - "Projekt2 Status: {{ projekt2_check.status }} - Content: {{ projekt2_check.content | default('No content') | truncate(80) }}"
