@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # Traefik - reverse proxy with dashboard
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.dashboard.address=:8080"
+      # Enable automatic HTTPS with Let's Encrypt
+      - "--certificatesresolvers.leresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.leresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.leresolver.acme.email=admin@devopsterminal.com"
+      - "--certificatesresolvers.leresolver.acme.storage=/letsencrypt/acme.json"
+      # Enable dashboard
+      - "--api.dashboard=true"
+      # Use podman network
+      - "--providers.docker.network=prod_network"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard - should be restricted in production
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+      - "./traefik/traefik.log:/traefik.log"
+      - "./traefik/access.log:/access.log"
+    environment:
+      - TZ=Europe/Warsaw
+    restart: unless-stopped
+    networks:
+      - prod_network
+    labels:
+      - "traefik.enable=true"
+      # Dashboard protection
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.devopsterminal.com`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=leresolver"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      # Basic auth for dashboard (user:admin, password:changeme)
+      - "traefik.http.middlewares.auth.basicauth.users=admin:$$2y$$05$$5HXxP9X8wJqTgYz5jK5u8uJq5VZ5QkXJ5zQ9X8wJqTgYz5jK5u8uJ"
+
+  # Project 1 Service
+  projekt1:
+    build: ./projekt1
+    container_name: projekt1
+    restart: unless-stopped
+    networks:
+      - prod_network
+    labels:
+      - "traefik.enable=true"
+      # Main domain
+      - "traefik.http.routers.projekt1.rule=Host(`projekt1.devopsterminal.com`)"
+      - "traefik.http.routers.projekt1.entrypoints=websecure"
+      - "traefik.http.routers.projekt1.tls.certresolver=leresolver"
+      - "traefik.http.services.projekt1.loadbalancer.server.port=5000"
+      # Redirect HTTP to HTTPS
+      - "traefik.http.routers.projekt1-http.rule=Host(`projekt1.devopsterminal.com`)"
+      - "traefik.http.routers.projekt1-http.entrypoints=web"
+      - "traefik.http.routers.projekt1-http.middlewares=redirect-to-https@docker"
+    environment:
+      - FLASK_ENV=production
+
+  # Project 2 Service
+  projekt2:
+    build: ./projekt2
+    container_name: projekt2
+    restart: unless-stopped
+    networks:
+      - prod_network
+    labels:
+      - "traefik.enable=true"
+      # Main domain
+      - "traefik.http.routers.projekt2.rule=Host(`projekt2.devopsterminal.com`)"
+      - "traefik.http.routers.projekt2.entrypoints=websecure"
+      - "traefik.http.routers.projekt2.tls.certresolver=leresolver"
+      - "traefik.http.services.projekt2.loadbalancer.server.port=5000"
+      # Redirect HTTP to HTTPS
+      - "traefik.http.routers.projekt2-http.rule=Host(`projekt2.devopsterminal.com`)"
+      - "traefik.http.routers.projekt2-http.entrypoints=web"
+      - "traefik.http.routers.projekt2-http.middlewares=redirect-to-https@docker"
+    environment:
+      - FLASK_ENV=production
+
+  # Global redirect middleware
+  traefik-http-redirect:
+    image: traefik:v2.10
+    command: --providers.directory.watch=true --providers.file.directory=/etc/traefik --providers.file.watch=true
+    volumes:
+      - ./traefik/redirect.toml:/etc/traefik/redirect.toml
+    networks:
+      - prod_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+networks:
+  prod_network:
+    name: prod_network
+    external: false
