@@ -24,7 +24,9 @@
     - name: Assert Traefik Server header
       assert:
         that:
-          - "'traefik' in traefik_headers.headers['server'] | lower"
+          - traefik_headers.response_headers is defined
+          - traefik_headers.response_headers['server'] is defined
+          - "'traefik' in traefik_headers.response_headers['server'] | lower"
 
     - name: Check Projekt1 service
       uri:
