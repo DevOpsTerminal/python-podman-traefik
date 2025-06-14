@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=twoj@email.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "8080:8080"      # Traefik dashboard
+      - "8081:80"        # HTTP traffic
+      - "8443:443"       # HTTPS traffic
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    restart: unless-stopped
+
+  projekt1:
+    build: ./projekt1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.projekt1.rule=Host(`projekt1.localhost`)"
+      - "traefik.http.routers.projekt1.entrypoints=web"
+      - "traefik.http.services.projekt1.loadbalancer.server.port=5000"
+    restart: unless-stopped
+
+  projekt2:
+    build: ./projekt2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.projekt2.rule=Host(`projekt2.localhost`)"
+      - "traefik.http.routers.projekt2.entrypoints=web"
+      - "traefik.http.services.projekt2.loadbalancer.server.port=5000"
+    restart: unless-stopped
+

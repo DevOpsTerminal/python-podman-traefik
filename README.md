@@ -14,9 +14,16 @@ Jak używać Traefik jako zaawansowanego reverse proxy Jak konfigurować service
 
 ## Krok 1: Przygotowanie środowiska
 
-### Instalacja podstawowych narzędzi
+### Sprawdzenie narzędzi
 ```bash
-# Zaktualizuj system
+podman info
+podman-compose --version
+docker compose version 
+```
+
+### Instalacja podstawowych narzędzi na debian, Ubuntu
+```bash
+# Zaktualizuj system 
 sudo apt update && sudo apt upgrade -y
 
 # Zainstaluj Podman
@@ -29,7 +36,33 @@ pip3 install podman-compose
 sudo apt install docker-compose-plugin -y
 ```
 
+### Instalacja podstawowych narzędzi na Fedora
+
+```bash
+# Zaktualizuj system
+sudo dnf upgrade --refresh -y
+
+# Zainstaluj Podman
+sudo dnf install podman -y
+
+# Zainstaluj podman-compose (potrzebne do docker-compose.yml)
+pip3 install --user podman-compose
+
+# Upewnij się, że ~/.local/bin jest w PATH (jeśli nie, dodaj do ~/.bashrc lub ~/.zshrc)
+export PATH=$HOME/.local/bin:$PATH
+
+# (Opcjonalnie) Zainstaluj docker-compose-plugin z Dockerem
+sudo dnf install dnf-plugins-core -y
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
+
+# (Opcjonalnie) Włącz Docker jeśli został zainstalowany
+sudo systemctl enable --now docker
+```
+
 ---
+
+
 
 ## Krok 2: Struktura projektu
 
