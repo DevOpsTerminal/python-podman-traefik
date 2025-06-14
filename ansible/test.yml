@@ -13,6 +13,19 @@
       register: traefik_dashboard
       ignore_errors: yes
 
+    - name: Check Traefik dashboard headers
+      uri:
+        url: http://localhost:8083/dashboard/
+        method: GET
+        status_code: 200
+        return_content: no
+      register: traefik_headers
+
+    - name: Assert Traefik Server header
+      assert:
+        that:
+          - "'traefik' in traefik_headers.headers['server'] | lower"
+
     - name: Check Projekt1 service
       uri:
         url: http://localhost:8081/projekt1

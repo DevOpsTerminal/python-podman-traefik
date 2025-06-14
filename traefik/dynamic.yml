@@ -1,0 +1,10 @@
+# Dynamic configuration is now handled through Docker labels
+# This file is kept as a placeholder but is not actively used
+
+http:
+  serversTransports:
+    myTransport:
+      insecureSkipVerify: true
+      maxIdleConnsPerHost: 200
+
+# All routing and middleware configuration is now managed through Docker labels in docker-compose.yml

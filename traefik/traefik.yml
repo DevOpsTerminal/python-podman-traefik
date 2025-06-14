@@ -6,13 +6,20 @@ api:
 entryPoints:
   web:
     address: ":80"
-  dashboard:
+  traefik:
     address: ":8083"
 
 providers:
-  file:
-    filename: "/etc/traefik/rules.yml"
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false  # Only expose containers with traefik.enable=true
+    network: podman          # Match your Podman network name
+    useBindPortIP: false     # Important for Podman compatibility
     watch: true
+
+serversTransport:
+  insecureSkipVerify: true
 
 log:
   level: DEBUG
+  format: common

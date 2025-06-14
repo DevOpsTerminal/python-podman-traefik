@@ -33,13 +33,13 @@ http:
     projekt1:
       loadBalancer:
         servers:
-          - url: "http://projekt1:5000"
+          - url: "http://python-podman-traefik_projekt1_1:5000"
 
     # Project 2 service
     projekt2:
       loadBalancer:
         servers:
-          - url: "http://projekt2:5000"
+          - url: "http://python-podman-traefik_projekt2_1:5000"
 
   middlewares:
     # Strip /projekt1 prefix
@@ -59,3 +59,4 @@ http:
       stripPrefix:
         prefixes:
           - "/dashboard"
+        forceSlash: true

@@ -9,7 +9,10 @@ services:
       - "8083:8083"      # Traefik dashboard
     volumes:
       - "./traefik/traefik.yml:/etc/traefik/traefik.yml:ro"
-      - "./traefik/rules.yml:/etc/traefik/rules.yml:ro"
+      - "./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro"
+      - "/run/user/1000/podman/podman.sock:/var/run/docker.sock"  # Mount Podman socket
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
     networks:
       - podman
     restart: unless-stopped
@@ -21,22 +24,30 @@ services:
     build: ./projekt1
     networks:
       - podman
+    expose:
+      - 5000
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.projekt1.rule=Host(`localhost`) && PathPrefix(`/projekt1`)"
       - "traefik.http.routers.projekt1.entrypoints=web"
       - "traefik.http.services.projekt1.loadbalancer.server.port=5000"
-      - "traefik.http.middlewares.strip-prefix.stripprefix.prefixes=/projekt1"
-      - "traefik.http.routers.projekt1.middlewares=strip-prefix@docker"
+      - "traefik.http.middlewares.strip-projekt1.stripprefix.prefixes=/projekt1"
+      - "traefik.http.routers.projekt1.middlewares=strip-projekt1@docker"
     restart: unless-stopped
 
   projekt2:
     build: ./projekt2
     networks:
       - podman
+    expose:
+      - 5000
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.projekt2.rule=Host(`localhost`) && PathPrefix(`/projekt2`)"
+      - "traefik.http.routers.projekt2.entrypoints=web"
+      - "traefik.http.services.projekt2.loadbalancer.server.port=5000"
+      - "traefik.http.middlewares.strip-projekt2.stripprefix.prefixes=/projekt2"
+      - "traefik.http.routers.projekt2.middlewares=strip-projekt2@docker"
     restart: unless-stopped
 
 networks:

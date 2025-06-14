@@ -1,4 +1,4 @@
-# 🔧 Tutorial Deployment Flask z Podman + Traefik
+# Tutorial Deployment Flask z Podman + Traefik
 
 Jak używać Traefik jako zaawansowanego reverse proxy Jak konfigurować service discovery Jak używać labels w kontenerach Jak monitorować aplikacje przez dashboard
 
@@ -331,59 +331,46 @@ services:
 
 ---
 
-## Krok 5: Uruchomienie systemu
+## Krok 5: Testowanie środowiska (Ansible)
 
-### Przygotowanie aplikacji
+Do automatycznych testów środowiska możesz użyć playbooka:
+
 ```bash
-# Skopiuj swoje aplikacje do odpowiednich folderów
-cp -r ~/moj-sklep/* ~/traefik-setup/sklep/
-cp -r ~/moj-blog/* ~/traefik-setup/blog/
-# itd...
-
-# Lub utwórz przykładowe aplikacje
-cd ~/traefik-setup
+ansible-playbook ansible/test.yml
 ```
 
-### Uruchomienie (wersja testowa)
-```bash
-# Uruchom z plikiem testowym
-docker-compose -f docker-compose-local.yml up -d
+Testuje on:
+- dostępność dashboardu Traefika (domyślnie na http://localhost:8083/dashboard/ lub http://localhost:8081/dashboard/)
+- dostępność usług projekt1 i projekt2 przez Traefik
+- nagłówek Server dla dashboardu Traefika
 
-# Sprawdź status
-docker-compose -f docker-compose-local.yml ps
+#### Przykład Makefile
+
+```Makefile
+up:
+	podman-compose -f docker-compose.yml up -d
+
+down:
+	podman-compose -f docker-compose.yml down
+
+logs:
+	podman-compose -f docker-compose.yml logs
+
+test:
+	ansible-playbook ansible/test.yml
+
+ps:
+	podman ps -a
+
+restart:
+	podman-compose -f docker-compose.yml down && podman-compose -f docker-compose.yml up -d
 ```
 
-### Testowanie
-```bash
-# Sprawdź dashboard Traefik
-curl http://localhost:8082
+## Krok 6: Debugowanie
 
-# Testuj aplikacje
-curl http://localhost/sklep
-curl http://localhost/blog
-curl http://localhost/api
-curl http://localhost/portfolio
-```
-
----
-
-## Krop 6: Monitoring i Dashboard
-
-### Dostęp do Dashboard Traefik
-Idź na: `http://twój-ip:8082`
-
-W dashboard zobaczysz:
-- **HTTP Routers**: Twoje trasy
-- **HTTP Services**: Twoje usługi
-- **HTTP Middlewares**: Middleware (CORS, auth, itp.)
-
-### Zaawansowany monitoring z Prometheus
-```yaml
-# Dodaj do docker-compose.yml w sekcji traefik command:
-- "--metrics.prometheus=true"
-- "--metrics.prometheus.addEntryPointsLabels=true"
-- "--metrics.prometheus.addServicesLabels=true"
-```
+- Jeśli dashboard nie działa na `/dashboard/`, sprawdź porty i ścieżki w traefik.yml.
+- Sprawdź logi Traefika: `make logs`
+- Sprawdź, czy backendy odpowiadają na `/projekt1` i `/projekt2`.
 
 ---
 
@@ -541,9 +528,7 @@ docker inspect sklep | grep traefik
 
 #### Certyfikaty SSL nie działają
 ```bash
-# Sprawdź logi Traefik
-docker-compose logs traefik | grep acme
-
+# Sprawdź logi Traefika: `make logs`
 # Sprawdź plik certyfikatów
 ls -la letsencrypt/
 ```
